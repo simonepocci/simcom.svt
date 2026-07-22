@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Simulatore Compensi SEGNOVERDE+TISCALI</title>
+<meta name="description" content="Calcolo compensi partner Segnoverde e Tiscali">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14171a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Compensi S&amp;T">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+#compensi-app {
+  --bg: #14171a;
+  --surface: #1c2024;
+  --surface2: #242a2f;
+  --line: #333a40;
+  --paper: #f6f2e7;
+  --paper-ink: #2a2620;
+  --segno: #4fbf82;
+  --segno-dim: #2a4536;
+  --tiscali: #990099;
+  --tiscali-dim: #3a0e3a;
+  --ink: #eee9dd;
+  --ink-dim: #9aa1a6;
+  --gold: #e0ac4c;
+  --danger: #d3665c;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 0 0 120px 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+#compensi-app * { box-sizing: border-box; }
+#compensi-app .mono { font-family: 'IBM Plex Mono', monospace; }
+#compensi-app .display { font-family: 'Space Grotesk', sans-serif; }
+
+/* header */
+#compensi-app .topbar {
+  padding: 18px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+}
+#compensi-app .brand-line {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 2px;
+}
+#compensi-app .brand-line span.g { color: var(--segno); }
+#compensi-app .brand-line span.t { color: var(--tiscali); }
+#compensi-app .brand-line span.plus { color: var(--ink-dim); font-weight: 500; }
+#compensi-app .topbar h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600; margin: 0 0 2px; color: var(--ink-dim);
+  letter-spacing: 0.2px;
+}
+#compensi-app .topbar .sub { font-size: 12px; color: var(--ink-dim); }
+#compensi-app .canvass-sub {
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12.5px; color: var(--ink-dim);
+  margin-top: 4px;
+}
+#compensi-app .canvass-edit {
+  color: var(--gold); border-bottom: 1px dashed var(--gold); outline: none; padding: 0 2px; min-width: 24px; display: inline-block;
+}
+
+/* tabs */
+#compensi-app .tabs { display: flex; gap: 6px; margin-top: 14px; }
+#compensi-app .tab-btn {
+  flex: 1; padding: 9px 6px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-dim); font-size: 12.5px; font-weight: 600;
+  font-family: 'Inter', sans-serif; cursor: pointer;
+}
+#compensi-app .tab-btn.active { background: var(--surface2); color: var(--ink); border-color: var(--gold); }
+
+/* partner chips */
+#compensi-app .partner-row {
+  display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+#compensi-app .partner-chip {
+  flex: 0 0 auto; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-dim); font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+#compensi-app .partner-chip.active { background: var(--gold); color: #23180a; border-color: var(--gold); }
+#compensi-app .partner-add {
+  flex: 0 0 auto; padding: 7px 13px; border-radius: 999px; border: 1px dashed var(--ink-dim);
+  background: transparent; color: var(--ink-dim); font-size: 13px; cursor: pointer;
+}
+
+#compensi-app .name-row {
+  padding: 12px 16px 0; display: flex; align-items: center; gap: 10px;
+}
+#compensi-app .name-row input {
+  flex: 1; background: transparent; border: none; border-bottom: 1px dashed var(--line);
+  color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700;
+  padding: 4px 0; outline: none;
+}
+#compensi-app .del-partner { background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; padding: 4px 8px; }
+
+/* sections */
+#compensi-app .content { padding: 14px 16px; }
+#compensi-app .section {
+  background: var(--surface); border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+  border: 1px solid var(--line); border-left: 3px solid var(--line);
+}
+#compensi-app .section.segno { border-left-color: var(--segno); }
+#compensi-app .section.tiscali { border-left-color: var(--tiscali); }
+#compensi-app .sec-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 14px; cursor: pointer;
+}
+#compensi-app .sec-head .label { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; }
+#compensi-app .section.segno .sec-head .label { color: var(--segno); }
+#compensi-app .section.tiscali .sec-head .label { color: var(--tiscali); }
+#compensi-app .sec-head .label small { display:block; font-family:'Inter',sans-serif; font-weight:500; font-size: 11px; color: var(--ink-dim); margin-top: 1px;}
+#compensi-app .sec-head .sub-total { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--gold); font-weight: 600; }
+#compensi-app .sec-head .chev { color: var(--ink-dim); margin-left: 8px; transition: transform .2s; font-size: 11px; }
+#compensi-app .sec-body { padding: 0 14px 14px; display: none; }
+#compensi-app .section.open .sec-body { display: block; }
+#compensi-app .section.open .chev { transform: rotate(180deg); }
+
+#compensi-app .prod-row {
+  padding: 10px 0; border-top: 1px solid var(--line);
+}
+#compensi-app .prod-row:first-child { border-top: none; }
+#compensi-app .prod-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+#compensi-app .prod-title .rate { color: var(--ink-dim); font-weight: 400; font-size: 11px; }
+#compensi-app .fields { display: flex; gap: 8px; flex-wrap: wrap; }
+#compensi-app .fields.fields-grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; row-gap: 16px; }
+#compensi-app .fields.fields-grid2 .field { min-width: 0; }
+#compensi-app .field label { display: block; font-size: 10.5px; color: var(--ink-dim); margin-bottom: 3px; line-height: 1.3; }
+#compensi-app .field { flex: 1; min-width: 68px; }
+#compensi-app .stepper { display: flex; align-items: center; background: var(--surface2); border-radius: 8px; border: 1px solid var(--line); }
+#compensi-app .stepper button {
+  width: 30px; height: 34px; background: none; border: none; color: var(--ink); font-size: 16px; cursor: pointer;
+}
+#compensi-app .stepper input {
+  width: 100%; text-align: center; background: none; border: none; color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace; font-size: 14px; -moz-appearance: textfield; outline: none;
+}
+#compensi-app .stepper input::-webkit-outer-spin-button, #compensi-app .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* receipt bottom bar */
+#compensi-app .receipt-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  background: var(--paper); color: var(--paper-ink);
+  border-top: 1px dashed #b8ae95;
+  padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer;
+  max-width: 900px; margin: 0 auto;
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.35);
+}
+#compensi-app .receipt-bar .rb-label { font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6350; }
+#compensi-app .receipt-bar .rb-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; }
+#compensi-app .receipt-bar .rb-amount { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
+
+/* receipt modal */
+#compensi-app .receipt-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 30;
+  display: none; align-items: flex-end; justify-content: center;
+}
+#compensi-app .receipt-modal.open { display: flex; }
+#compensi-app .receipt-paper {
+  background: var(--paper); color: var(--paper-ink); width: 100%; max-width: 480px;
+  border-radius: 14px 14px 0 0; padding: 22px 22px 28px; max-height: 82vh; overflow-y: auto;
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(0,0,0,0.035) 28px);
+}
+#compensi-app .receipt-paper h2 {
+  font-family: 'Space Grotesk', sans-serif; font-size: 16px; text-align: center; margin: 0 0 2px;
+}
+#compensi-app .receipt-paper .rp-sub { text-align: center; font-size: 10.5px; color: #6b6350; margin-bottom: 14px; letter-spacing: 0.5px;}
+#compensi-app .rp-line { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; }
+#compensi-app .rp-line.item-name { color: #55503f; }
+#compensi-app .rp-sec-title { margin-top: 12px; font-weight: 600; border-top: 1px dashed #b8ae95; padding-top: 8px; }
+#compensi-app .rp-total { border-top: 2px solid var(--paper-ink); margin-top: 12px; padding-top: 10px; font-size: 16px; font-weight: 700; display:flex; justify-content:space-between;}
+#compensi-app .rp-close { display: block; margin: 18px auto 0; background: var(--paper-ink); color: var(--paper); border: none; padding: 10px 22px; border-radius: 999px; font-family:'Inter',sans-serif; font-weight:600; font-size: 13px; }
+
+/* summary table */
+#compensi-app .summary-table { width: 100%; border-collapse: collapse; margin-top: 4px;}
+#compensi-app .summary-table th { text-align: left; font-size: 11px; color: var(--ink-dim); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--line);}
+#compensi-app .summary-table td { padding: 10px 4px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+#compensi-app .summary-table td.amt { font-family: 'IBM Plex Mono', monospace; text-align: right; color: var(--gold); font-weight: 600; }
+#compensi-app .grand-total-card {
+  background: var(--surface2); border-radius: 12px; padding: 16px; margin-top: 14px; text-align: center;
+  border: 1px solid var(--gold);
+}
+#compensi-app .grand-total-card .gt-label { font-size: 11px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.5px;}
+#compensi-app .grand-total-card .gt-amount { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: var(--gold); margin-top: 4px;}
+#compensi-app .empty-hint { color: var(--ink-dim); font-size: 12.5px; padding: 30px 16px; text-align: center; line-height: 1.6; }
+
+/* pie chart */
+#compensi-app .pie-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-top: 14px; }
+#compensi-app .pie-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; margin: 0 0 14px; font-weight: 700; }
+#compensi-app .pie-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center; }
+#compensi-app .pie-chart { width: 150px; height: 150px; flex: 0 0 auto; overflow: visible; }
+#compensi-app .pie-slice { cursor: pointer; transition: opacity .12s; }
+#compensi-app .pie-slice:active { opacity: 0.72; }
+#compensi-app .pie-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 8px 4px; cursor: pointer; border-radius: 6px; }
+#compensi-app .pie-legend-row:active { background: var(--surface2); }
+#compensi-app .pie-legend { flex: 1; min-width: 160px; }
+#compensi-app .pie-dot { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+#compensi-app .pie-legend-row .pl-pct { font-family: 'IBM Plex Mono', monospace; color: var(--ink-dim); min-width: 44px; text-align: right; }
+#compensi-app .pie-legend-row .pl-amt { margin-left: auto; font-family: 'IBM Plex Mono', monospace; color: var(--ink); font-size: 12px; }
+#compensi-app .toast {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60;
+  background: var(--danger); color: #fff; padding: 10px 18px; border-radius: 9px;
+  font-size: 12.5px; font-weight: 600; max-width: 88%; text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35); font-family: 'Inter', sans-serif;
+}
+#compensi-app .summary-table tr.partner-row-link { cursor: pointer; }
+#compensi-app .summary-table tr.partner-row-link td { padding: 14px 4px; }
+#compensi-app .summary-table tr.partner-row-link:active { background: var(--surface2); }
+#compensi-app .summary-table td.chev-cell { color: var(--ink-dim); text-align: right; width: 18px; }
+</style>
+<style>
+  html, body { margin:0; padding:0; background:#14171a; }
+</style>
+</head>
+<body>
+<div id="compensi-app">
+  <div class="topbar">
+    <div class="brand-line"><span class="g">SEGNOVERDE</span> <span class="plus">+</span> <span class="t">TISCALI</span></div>
+    <h1>Simulatore Compensi</h1>
+    <div class="canvass-sub">Canvass <span id="canvassWord" class="canvass-edit" contenteditable="true" spellcheck="false"></span> 2026</div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="entry">Inserimento</button>
+      <button class="tab-btn" data-tab="summary">Riepilogo Partner</button>
+    </div>
+  </div>
+
+  <div id="tab-entry">
+    <div class="partner-row" id="partnerRow"></div>
+    <div class="name-row" id="nameRow"></div>
+    <div class="content" id="entryContent"></div>
+  </div>
+
+  <div id="tab-summary" style="display:none;">
+    <div class="content" id="summaryContent"></div>
+  </div>
+
+  <div class="receipt-bar" id="receiptBar">
+    <div>
+      <div class="rb-label">Totale</div>
+      <div class="rb-name" id="rbName">—</div>
+    </div>
+    <div class="rb-amount mono" id="rbAmount">€ 0,00</div>
+  </div>
+
+  <div class="receipt-modal" id="receiptModal">
+    <div class="receipt-paper" id="receiptPaper"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const appStorage = {
+    async get(key){ try { const v = localStorage.getItem(key); return v ? {value:v} : null; } catch(e){ return null; } },
+    async set(key, value){ try { localStorage.setItem(key, value); return {value}; } catch(e){ return null; } }
+  };
+  const ENERGY_PRODUCTS = [
+    {id:'sicura', label:'Sicura & Agile Flex', sdd:86, bp:71},
+    {id:'agilePremium', label:'Agile Premium', sdd:116, bp:101},
+    {id:'secondaCasa', label:'Seconda Casa', sdd:76, bp:0},
+    {id:'segnoV', label:'Segno-V Luce & Gas (listini web)', sdd:27, bp:0},
+    {id:'impresaSmall', label:'Impresa Small', sdd:86, bp:0},
+    {id:'smart', label:'Smart & Smart FIX', sdd:128, bp:0},
+  ];
+  const SV_MOBILE_TIERS = [
+    {max:12, new:3, mnp:9, boost:5, label:'Soglia 1'},
+    {max:24, new:5, mnp:13, boost:6, label:'Soglia 2'},
+    {max:36, new:8, mnp:18, boost:7, label:'Soglia 3'},
+    {max:Infinity, new:10, mnp:22, boost:8, label:'Soglia 4'},
+  ];
+  const CONV_RATES = {convStd:13, convPrem:23, convWeb:6};
+  const SV_MOBILE_FIELDS = [
+    {id:'new', label:'NEW'}, {id:'mnp', label:'MNP'},
+    {id:'ricAuto', label:'di cui Ricarica Automatica'}, {id:'convStd', label:'di cui Convergenza Standard'},
+    {id:'convPrem', label:'di cui Convergenza Premium'}, {id:'convWeb', label:'di cui Convergenza Web'},
+  ];
+  const CONV_FIELDS = ['convStd','convPrem','convWeb'];
+
+  function validateSvMobileField(d, fieldId, newValue){
+    const sum = (d.svMobile.new||0) + (d.svMobile.mnp||0);
+    if (fieldId === 'ricAuto'){
+      if (newValue > sum){
+        showToast('"di cui Ricarica Automatica" ('+newValue+') non può superare la somma di NEW + MNP ('+sum+').');
+        return false;
+      }
+    } else if (CONV_FIELDS.includes(fieldId)){
+      const others = CONV_FIELDS.filter(f=>f!==fieldId).reduce((s,f)=>s+(d.svMobile[f]||0),0);
+      if (newValue + others > sum){
+        showToast('La somma di "di cui Convergenza" (Standard + Premium + Web = '+(newValue+others)+') non può superare la somma di NEW + MNP ('+sum+').');
+        return false;
+      }
+    }
+    return true;
+  }
+  const TISCALI_MOBILE_PLANS = [
+    {id:'m150', label:'Mobile 150', mnpRicAuto:33, mnpRic:27, newRicAuto:8.25, newRic:6.75},
+    {id:'m200', label:'Mobile 200', mnpRicAuto:33, mnpRic:27, newRicAuto:8.25, newRic:6.75},
+    {id:'m250', label:'Mobile 250', mnpRicAuto:39, mnpRic:31, newRicAuto:9.75, newRic:7.75},
+    {id:'m350', label:'Mobile 350', mnpRicAuto:54, mnpRic:45, newRicAuto:13.5, newRic:11.25},
+    {id:'biz250', label:'Business Mobile 250', mnpRicAuto:33, mnpRic:0, newRicAuto:8.25, newRic:0},
+    {id:'biz400', label:'Business Mobile 400', mnpRicAuto:54, mnpRic:0, newRicAuto:13.5, newRic:0},
+  ];
+  const TISCALI_FISSO_PRODUCTS = [
+    {id:'casaFibra', label:'Casa Fibra Power / UltraInternet'},
+    {id:'casaFibraHS', label:'Casa Fibra Power/UltraInternet + Home Safe'},
+    {id:'casaFwa', label:'Casa FWA 5G'},
+    {id:'casaFwaHS', label:'Casa FWA 5G + Home Safe'},
+    {id:'bizFibra', label:'Business Fibra Power / UltraInternet'},
+    {id:'bizFwa', label:'Business FWA 5G'},
+  ];
+  const FISSO_TIERS = [
+    {max:8, label:'Soglia 1', rates:{casaFibra:60, casaFibraHS:80, casaFwa:60, casaFwaHS:80, bizFibra:150, bizFwa:150}},
+    {max:22, label:'Soglia 2', rates:{casaFibra:90, casaFibraHS:100, casaFwa:90, casaFwaHS:100, bizFibra:170, bizFwa:150}},
+    {max:29, label:'Soglia 3', rates:{casaFibra:105, casaFibraHS:120, casaFwa:105, casaFwaHS:120, bizFibra:185, bizFwa:150}},
+    {max:Infinity, label:'Soglia 4', rates:{casaFibra:115, casaFibraHS:130, casaFwa:115, casaFwaHS:130, bizFibra:185, bizFwa:150}},
+  ];
+
+  const STORAGE_KEY = 'app-state-v1';
+  let state = null;
+  let openSections = {energy:true, svm:false, tm:false, tf:false};
+  let activeTab = 'entry';
+  let confirmDeleteId = null;
+
+  function showToast(msg){
+    const app = document.getElementById('compensi-app');
+    const old = document.getElementById('appToast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.id = 'appToast'; t.className = 'toast'; t.textContent = msg;
+    app.appendChild(t);
+    setTimeout(()=>{ if (t && t.parentNode) t.remove(); }, 3800);
+  }
+
+  function emptyPartnerData(){
+    return {
+      energy: Object.fromEntries(ENERGY_PRODUCTS.map(p=>[p.id,{sdd:0,bp:0}])),
+      svMobile: Object.fromEntries(SV_MOBILE_FIELDS.map(f=>[f.id,0])),
+      tMobile: Object.fromEntries(TISCALI_MOBILE_PLANS.map(p=>[p.id,{mnpRicAuto:0,mnpRic:0,newRicAuto:0,newRic:0}])),
+      tFisso: Object.fromEntries(TISCALI_FISSO_PRODUCTS.map(p=>[p.id,0])),
+    };
+  }
+  function defaultState(){
+    const id = 'p_'+Date.now();
+    return { partners:[{id, name:'Partner 1'}], activeId:id, data:{[id]: emptyPartnerData()}, canvassLabel:'mese' };
+  }
+
+  function fmt(n){
+    return '€ ' + (Math.round((n||0)*100)/100).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function calcEnergy(d){
+    let tot=0;
+    ENERGY_PRODUCTS.forEach(p=>{
+      const c = d.energy[p.id] || {sdd:0,bp:0};
+      tot += (c.sdd||0)*p.sdd + (c.bp||0)*p.bp;
+    });
+    return tot;
+  }
+  function svMobileTier(d){
+    const vol = (d.svMobile.new||0) + (d.svMobile.mnp||0);
+    return SV_MOBILE_TIERS.find(t=>vol<t.max);
+  }
+  function calcSvMobile(d){
+    const m = d.svMobile; const tier = svMobileTier(d);
+    return (m.new||0)*tier.new + (m.mnp||0)*tier.mnp + (m.ricAuto||0)*tier.boost
+      + (m.convStd||0)*CONV_RATES.convStd + (m.convPrem||0)*CONV_RATES.convPrem + (m.convWeb||0)*CONV_RATES.convWeb;
+  }
+  function calcTMobile(d){
+    let tot=0;
+    TISCALI_MOBILE_PLANS.forEach(p=>{
+      const c = d.tMobile[p.id] || {};
+      tot += (c.mnpRicAuto||0)*p.mnpRicAuto + (c.mnpRic||0)*p.mnpRic + (c.newRicAuto||0)*p.newRicAuto + (c.newRic||0)*p.newRic;
+    });
+    return tot;
+  }
+  function tFissoTier(d){
+    const vol = TISCALI_FISSO_PRODUCTS.reduce((s,p)=>s+(d.tFisso[p.id]||0),0);
+    return FISSO_TIERS.find(t=>vol<t.max);
+  }
+  function calcTFisso(d){
+    const tier = tFissoTier(d);
+    let tot=0;
+    TISCALI_FISSO_PRODUCTS.forEach(p=>{ tot += (d.tFisso[p.id]||0) * tier.rates[p.id]; });
+    return tot;
+  }
+  function calcTotal(d){ return calcEnergy(d)+calcSvMobile(d)+calcTMobile(d)+calcTFisso(d); }
+
+  async function save(){
+    try { await appStorage.set(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ console.error('storage set failed', e); }
+  }
+  async function load(){
+    try {
+      const res = await appStorage.get(STORAGE_KEY);
+      if (res && res.value) {
+        state = JSON.parse(res.value);
+        if (!state.canvassLabel) state.canvassLabel = 'mese';
+        return;
+      }
+    } catch(e){ /* not found or error */ }
+    state = defaultState();
+  }
+
+  function activePartner(){ return state.partners.find(p=>p.id===state.activeId); }
+  function activeData(){ return state.data[state.activeId]; }
+
+  function stepperField(container, label, value, onChange, min=0){
+    const wrap = document.createElement('div'); wrap.className='field';
+    const lab = document.createElement('label'); lab.textContent = label; wrap.appendChild(lab);
+    const st = document.createElement('div'); st.className='stepper';
+    const minus = document.createElement('button'); minus.textContent='–'; minus.type='button';
+    const input = document.createElement('input'); input.type='number'; input.value = value; input.min=min;
+    if ((parseFloat(value)||0) > 0) { input.style.color = 'var(--gold)'; input.style.fontWeight = '600'; }
+    const plus = document.createElement('button'); plus.textContent='+'; plus.type='button';
+    minus.onclick = ()=>{ onChange(Math.max(min, (parseFloat(input.value)||0)-1)); };
+    plus.onclick = ()=>{ onChange((parseFloat(input.value)||0)+1); };
+    input.oninput = ()=>{ onChange(Math.max(min, parseFloat(input.value)||0)); };
+    st.appendChild(minus); st.appendChild(input); st.appendChild(plus);
+    wrap.appendChild(st);
+    container.appendChild(wrap);
+  }
+
+  function renderPartnerRow(){
+    const row = document.getElementById('partnerRow');
+    row.innerHTML = '';
+    state.partners.forEach(p=>{
+      const chip = document.createElement('div');
+      chip.className = 'partner-chip' + (p.id===state.activeId ? ' active':'');
+      chip.textContent = p.name || 'Partner';
+      chip.onclick = ()=>{ state.activeId = p.id; confirmDeleteId = null; save(); renderAll(); };
+      row.appendChild(chip);
+    });
+    const add = document.createElement('div');
+    add.className = 'partner-add'; add.textContent = '+ Nuovo';
+    add.onclick = ()=>{
+      const id = 'p_'+Date.now();
+      state.partners.push({id, name:'Partner '+(state.partners.length+1)});
+      state.data[id] = emptyPartnerData();
+      state.activeId = id;
+      confirmDeleteId = null;
+      save(); renderAll();
+    };
+    row.appendChild(add);
+  }
+
+  function renderNameRow(){
+    const row = document.getElementById('nameRow');
+    row.innerHTML = '';
+    const p = activePartner();
+    const input = document.createElement('input');
+    input.value = p.name; input.placeholder = 'Nome Partner';
+    input.oninput = ()=>{ p.name = input.value; save(); renderPartnerRow(); renderReceiptBar(); };
+    row.appendChild(input);
+    if (state.partners.length > 1){
+      if (confirmDeleteId === p.id){
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className='del-partner'; confirmBtn.style.color='#fff';
+        confirmBtn.style.background='var(--danger)'; confirmBtn.style.borderRadius='6px';
+        confirmBtn.textContent='Confermi eliminazione?';
+        confirmBtn.onclick = ()=>{
+          delete state.data[p.id];
+          state.partners = state.partners.filter(x=>x.id!==p.id);
+          state.activeId = state.partners[0].id;
+          confirmDeleteId = null;
+          save(); renderAll();
+        };
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className='del-partner'; cancelBtn.textContent='Annulla';
+        cancelBtn.onclick = ()=>{ confirmDeleteId = null; renderNameRow(); };
+        row.appendChild(confirmBtn); row.appendChild(cancelBtn);
+      } else {
+        const del = document.createElement('button');
+        del.className='del-partner'; del.textContent='Elimina';
+        del.onclick = ()=>{ confirmDeleteId = p.id; renderNameRow(); };
+        row.appendChild(del);
+      }
+    }
+  }
+
+  function section(id, cls, title, subtitle, subtotal, bodyBuilder){
+    const sec = document.createElement('div');
+    sec.className = 'section ' + cls + (openSections[id] ? ' open':'');
+    const head = document.createElement('div'); head.className='sec-head';
+    head.innerHTML = `<div class="label">${title}<small>${subtitle}</small></div>`;
+    const right = document.createElement('div'); right.style.display='flex'; right.style.alignItems='center';
+    const st = document.createElement('span'); st.className='sub-total mono'; st.textContent = fmt(subtotal);
+    const chev = document.createElement('span'); chev.className='chev'; chev.textContent='▾';
+    right.appendChild(st); right.appendChild(chev);
+    head.appendChild(right);
+    head.onclick = ()=>{ openSections[id] = !openSections[id]; renderEntry(); };
+    const body = document.createElement('div'); body.className='sec-body';
+    bodyBuilder(body);
+    sec.appendChild(head); sec.appendChild(body);
+    return sec;
+  }
+
+  function renderEntry(){
+    const c = document.getElementById('entryContent');
+    c.innerHTML = '';
+    const d = activeData();
+
+    // ENERGY
+    const volEnergy = ENERGY_PRODUCTS.reduce((s,p)=>{ const c2=d.energy[p.id]; return s+(c2.sdd||0)+(c2.bp||0); },0);
+    c.appendChild(section('energy','segno','Segnoverde · Energy','Gettoni a soglia unica riconosciuti dal primo evento.', calcEnergy(d), body=>{
+      const note = document.createElement('div');
+      note.style.cssText='font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;';
+      note.textContent = 'Volumi Energy: '+volEnergy;
+      body.appendChild(note);
+      ENERGY_PRODUCTS.forEach(p=>{
+        const row = document.createElement('div'); row.className='prod-row';
+        row.innerHTML = `<div class="prod-title">${p.label} <span class="rate">SDD €${p.sdd} · BP €${p.bp}</span></div>`;
+        const fields = document.createElement('div'); fields.className='fields';
+        const c2 = d.energy[p.id];
+        stepperField(fields, 'SDD (Domiciliazione RID)', c2.sdd, v=>{ c2.sdd=v; save(); renderEntry(); });
+        if (p.bp>0 || c2.bp>0) stepperField(fields, 'BP (Bollettino Postale PagoPA)', c2.bp, v=>{ c2.bp=v; save(); renderEntry(); });
+        row.appendChild(fields); body.appendChild(row);
+      });
+    }));
+
+    // SV MOBILE
+    const tier = svMobileTier(d);
+    const vol = (d.svMobile.new||0)+(d.svMobile.mnp||0);
+    c.appendChild(section('svm','segno','Segnoverde · Mobile','', calcSvMobile(d), body=>{
+      const note = document.createElement('div');
+      note.style.cssText='font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;';
+      note.textContent = 'Volumi Mobile: '+vol+' — '+tier.label;
+      body.appendChild(note);
+      const warn = document.createElement('div');
+      warn.style.cssText='font-size:11.5px;color:var(--gold);margin-bottom:8px;';
+      warn.textContent = 'Attenzione: i campi "di cui Convergenza..." non possono superare il totale NEW + MNP.';
+      body.appendChild(warn);
+      SV_MOBILE_FIELDS.forEach(f=>{
+        const row = document.createElement('div'); row.className='prod-row';
+        row.innerHTML = `<div class="prod-title">${f.label}</div>`;
+        const fields = document.createElement('div'); fields.className='fields';
+        const stepLabel = (f.id==='new' || f.id==='mnp') ? ('Attivazioni — '+tier.label) : 'Attivazioni';
+        stepperField(fields, stepLabel, d.svMobile[f.id], v=>{
+          if (!validateSvMobileField(d, f.id, v)){ renderEntry(); return; }
+          d.svMobile[f.id]=v; save(); renderEntry();
+        });
+        row.appendChild(fields); body.appendChild(row);
+      });
+    }));
+
+    // TISCALI MOBILE
+    const volTMobile = TISCALI_MOBILE_PLANS.reduce((s,p)=>{
+      const c2 = d.tMobile[p.id];
+      return s+(c2.mnpRicAuto||0)+(c2.mnpRic||0)+(c2.newRicAuto||0)+(c2.newRic||0);
+    },0);
+    c.appendChild(section('tm','tiscali','Tiscali · Mobile','Gettoni a soglia unica riconosciuti dal primo evento.', calcTMobile(d), body=>{
+      const note = document.createElement('div');
+      note.style.cssText='font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;';
+      note.textContent = 'Volumi Mobile: '+volTMobile;
+      body.appendChild(note);
+      TISCALI_MOBILE_PLANS.forEach(p=>{
+        const row = document.createElement('div'); row.className='prod-row';
+        row.innerHTML = `<div class="prod-title">${p.label}</div>`;
+        const fields = document.createElement('div'); fields.className='fields fields-grid2';
+        const c2 = d.tMobile[p.id];
+        stepperField(fields, 'MNP RIC_AUTO €'+p.mnpRicAuto, c2.mnpRicAuto, v=>{ c2.mnpRicAuto=v; save(); renderEntry(); });
+        if (p.mnpRic>0 || c2.mnpRic>0) stepperField(fields, 'MNP RIC €'+p.mnpRic, c2.mnpRic, v=>{ c2.mnpRic=v; save(); renderEntry(); });
+        stepperField(fields, 'NEW RIC_AUTO €'+p.newRicAuto, c2.newRicAuto, v=>{ c2.newRicAuto=v; save(); renderEntry(); });
+        if (p.newRic>0 || c2.newRic>0) stepperField(fields, 'NEW RIC €'+p.newRic, c2.newRic, v=>{ c2.newRic=v; save(); renderEntry(); });
+        row.appendChild(fields); body.appendChild(row);
+      });
+    }));
+
+    // TISCALI FISSO
+    const tf = tFissoTier(d);
+    const volF = TISCALI_FISSO_PRODUCTS.reduce((s,p)=>s+(d.tFisso[p.id]||0),0);
+    c.appendChild(section('tf','tiscali','Tiscali · Fisso','', calcTFisso(d), body=>{
+      const note = document.createElement('div');
+      note.style.cssText='font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;';
+      note.textContent = 'Volumi Fisso: '+volF+' — '+tf.label;
+      body.appendChild(note);
+      TISCALI_FISSO_PRODUCTS.forEach(p=>{
+        const row = document.createElement('div'); row.className='prod-row';
+        row.innerHTML = `<div class="prod-title">${p.label} <span class="rate">€${tf.rates[p.id]} (${tf.label})</span></div>`;
+        const fields = document.createElement('div'); fields.className='fields';
+        stepperField(fields, 'Contratti', d.tFisso[p.id], v=>{ d.tFisso[p.id]=v; save(); renderEntry(); });
+        row.appendChild(fields); body.appendChild(row);
+      });
+    }));
+
+    renderReceiptBar();
+  }
+
+  function renderReceiptBar(){
+    const p = activePartner(); const d = activeData();
+    document.getElementById('rbName').textContent = p.name || 'Partner';
+    document.getElementById('rbAmount').textContent = fmt(calcTotal(d));
+  }
+
+  function categoryLinesHTML(key, d){
+    let html = '';
+    if (key === 'energy'){
+      ENERGY_PRODUCTS.forEach(pr=>{
+        const c2 = d.energy[pr.id];
+        if ((c2.sdd||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} SDD x${c2.sdd}</span><span>${fmt(c2.sdd*pr.sdd)}</span></div>`;
+        if ((c2.bp||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} BP x${c2.bp}</span><span>${fmt(c2.bp*pr.bp)}</span></div>`;
+      });
+    } else if (key === 'svMobile'){
+      const tier = svMobileTier(d);
+      const rates = {new:tier.new, mnp:tier.mnp, ricAuto:tier.boost, convStd:CONV_RATES.convStd, convPrem:CONV_RATES.convPrem, convWeb:CONV_RATES.convWeb};
+      SV_MOBILE_FIELDS.forEach(f=>{
+        const v = d.svMobile[f.id];
+        if (v>0) html += `<div class="rp-line"><span class="item-name">${f.label} x${v}</span><span>${fmt(v*rates[f.id])}</span></div>`;
+      });
+    } else if (key === 'tMobile'){
+      TISCALI_MOBILE_PLANS.forEach(pr=>{
+        const c2 = d.tMobile[pr.id];
+        if ((c2.mnpRicAuto||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} MNP RIC_AUTO x${c2.mnpRicAuto}</span><span>${fmt(c2.mnpRicAuto*pr.mnpRicAuto)}</span></div>`;
+        if ((c2.mnpRic||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} MNP RIC x${c2.mnpRic}</span><span>${fmt(c2.mnpRic*pr.mnpRic)}</span></div>`;
+        if ((c2.newRicAuto||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} NEW RIC_AUTO x${c2.newRicAuto}</span><span>${fmt(c2.newRicAuto*pr.newRicAuto)}</span></div>`;
+        if ((c2.newRic||0)>0) html += `<div class="rp-line"><span class="item-name">${pr.label} NEW RIC x${c2.newRic}</span><span>${fmt(c2.newRic*pr.newRic)}</span></div>`;
+      });
+    } else if (key === 'tFisso'){
+      const tf = tFissoTier(d);
+      TISCALI_FISSO_PRODUCTS.forEach(pr=>{
+        const v = d.tFisso[pr.id];
+        if (v>0) html += `<div class="rp-line"><span class="item-name">${pr.label} x${v}</span><span>${fmt(v*tf.rates[pr.id])}</span></div>`;
+      });
+    }
+    return html;
+  }
+
+  function buildReceiptHTML(partnerId){
+    const p = state.partners.find(x=>x.id===partnerId) || activePartner();
+    const d = state.data[p.id] || activeData();
+    const eEnergy = calcEnergy(d), eSvm = calcSvMobile(d), eTm = calcTMobile(d), eTf = calcTFisso(d);
+    let html = `<h2>${p.name || 'Partner'}</h2><div class="rp-sub">RICEVUTA COMPENSI · ${new Date().toLocaleDateString('it-IT')}</div>`;
+    html += `<div class="rp-sec-title">SEGNOVERDE ENERGY</div>`;
+    html += categoryLinesHTML('energy', d);
+    html += `<div class="rp-line"><b>Subtotale energia</b><b>${fmt(eEnergy)}</b></div>`;
+
+    html += `<div class="rp-sec-title">SEGNOVERDE MOBILE</div>`;
+    html += categoryLinesHTML('svMobile', d);
+    html += `<div class="rp-line"><b>Subtotale mobile SV</b><b>${fmt(eSvm)}</b></div>`;
+
+    html += `<div class="rp-sec-title">TISCALI MOBILE</div>`;
+    html += categoryLinesHTML('tMobile', d);
+    html += `<div class="rp-line"><b>Subtotale mobile Tiscali</b><b>${fmt(eTm)}</b></div>`;
+
+    html += `<div class="rp-sec-title">TISCALI FISSO</div>`;
+    html += categoryLinesHTML('tFisso', d);
+    html += `<div class="rp-line"><b>Subtotale fisso Tiscali</b><b>${fmt(eTf)}</b></div>`;
+
+    html += `<div class="rp-total"><span>TOTALE</span><span>${fmt(eEnergy+eSvm+eTm+eTf)}</span></div>`;
+    html += `<button class="rp-close" id="rpClose">Chiudi</button>`;
+    return html;
+  }
+
+  function renderSummary(){
+    const c = document.getElementById('summaryContent');
+    c.innerHTML = '';
+    if (state.partners.length === 0){
+      c.innerHTML = '<div class="empty-hint">Nessun Partner. Torna su "Inserimento" per aggiungerne uno.</div>';
+      return;
+    }
+    const table = document.createElement('table'); table.className='summary-table';
+    table.innerHTML = '<thead><tr><th>Partner</th><th style="text-align:right">Totale</th><th></th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    let grand = 0;
+    state.partners.forEach(p=>{
+      const d = state.data[p.id];
+      const tot = calcTotal(d);
+      grand += tot;
+      const tr = document.createElement('tr');
+      tr.className = 'partner-row-link';
+      tr.innerHTML = `<td>${p.name || 'Partner'}</td><td class="amt">${fmt(tot)}</td><td class="chev-cell">›</td>`;
+      tr.onclick = ()=> openReceiptModal(p.id);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    c.appendChild(table);
+    const gt = document.createElement('div'); gt.className='grand-total-card';
+    gt.innerHTML = `<div class="gt-label">Totale complessivo (${state.partners.length} Partner)</div><div class="gt-amount mono">${fmt(grand)}</div>`;
+    c.appendChild(gt);
+
+    // pie chart — composizione per componente su tutti i Partner
+    let sumEnergy=0, sumSvm=0, sumTm=0, sumTf=0;
+    state.partners.forEach(p=>{
+      const d = state.data[p.id];
+      sumEnergy += calcEnergy(d); sumSvm += calcSvMobile(d); sumTm += calcTMobile(d); sumTf += calcTFisso(d);
+    });
+    const compTotal = sumEnergy+sumSvm+sumTm+sumTf;
+    const comps = [
+      {key:'energy', label:'Segnoverde Energy', value:sumEnergy, color:'rgb(51,153,102)'},
+      {key:'svMobile', label:'Segnoverde Mobile', value:sumSvm, color:'rgb(146,208,80)'},
+      {key:'tMobile', label:'Tiscali Mobile', value:sumTm, color:'rgb(153,0,153)'},
+      {key:'tFisso', label:'Tiscali Fisso', value:sumTf, color:'rgb(112,48,160)'},
+    ];
+    const pieCard = document.createElement('div'); pieCard.className='pie-card';
+    pieCard.innerHTML = '<h3>Composizione Conto Economico S&T</h3>';
+    const wrap = document.createElement('div'); wrap.className='pie-wrap';
+    wrap.appendChild(buildPieSvg(comps, compTotal));
+    const legend = document.createElement('div'); legend.className='pie-legend';
+    comps.forEach(cm=>{
+      const pct = compTotal>0 ? (cm.value/compTotal*100) : 0;
+      const row = document.createElement('div'); row.className='pie-legend-row';
+      row.innerHTML = `<span class="pie-dot" style="background:${cm.color}"></span><span>${cm.label}</span><span class="pl-amt">${fmt(cm.value)}</span><span class="pl-pct">${pct.toFixed(1)}%</span>`;
+      row.onclick = ()=> openComponentReceipt(cm.key);
+      legend.appendChild(row);
+    });
+    wrap.appendChild(legend);
+    pieCard.appendChild(wrap);
+    c.appendChild(pieCard);
+  }
+
+  function lightenRgb(rgbStr, amt){
+    const m = rgbStr.match(/\d+/g).map(Number);
+    const [r,g,b] = m;
+    const nr = Math.round(r + (255-r)*amt);
+    const ng = Math.round(g + (255-g)*amt);
+    const nb = Math.round(b + (255-b)*amt);
+    return `rgb(${nr},${ng},${nb})`;
+  }
+
+  function polarPoint(cx, cy, r, angleDeg){
+    const a = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r*Math.cos(a), y: cy + r*Math.sin(a) };
+  }
+
+  function buildPieSvg(comps, compTotal){
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const size = 150, cx = 75, cy = 75, r = 70;
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('class', 'pie-chart');
+
+    if (compTotal <= 0){
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+      circle.setAttribute('fill', 'var(--surface2)');
+      svg.appendChild(circle);
+      return svg;
+    }
+
+    const nonZero = comps.filter(cm=>cm.value>0);
+    if (nonZero.length === 1){
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+      circle.setAttribute('fill', lightenRgb(nonZero[0].color, 0.16));
+      circle.setAttribute('class', 'pie-slice');
+      circle.onclick = ()=> openComponentReceipt(nonZero[0].key);
+      svg.appendChild(circle);
+      return svg;
+    }
+
+    let acc = 0;
+    comps.forEach(cm=>{
+      if (cm.value <= 0) return;
+      const pct = cm.value/compTotal;
+      const startAngle = acc*360;
+      const endAngle = (acc+pct)*360;
+      acc += pct;
+      const p1 = polarPoint(cx,cy,r,startAngle);
+      const p2 = polarPoint(cx,cy,r,endAngle);
+      const largeArc = (endAngle-startAngle) > 180 ? 1 : 0;
+      const d = `M ${cx},${cy} L ${p1.x.toFixed(2)},${p1.y.toFixed(2)} A ${r},${r} 0 ${largeArc} 1 ${p2.x.toFixed(2)},${p2.y.toFixed(2)} Z`;
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', lightenRgb(cm.color, 0.16));
+      path.setAttribute('class', 'pie-slice');
+      path.onclick = ()=> openComponentReceipt(cm.key);
+      svg.appendChild(path);
+    });
+    return svg;
+  }
+
+  function openComponentReceipt(key){
+    document.getElementById('receiptPaper').innerHTML = buildComponentReceiptHTML(key);
+    document.getElementById('receiptModal').classList.add('open');
+    document.getElementById('rpClose').onclick = ()=> document.getElementById('receiptModal').classList.remove('open');
+  }
+
+  function buildComponentReceiptHTML(key){
+    const meta = {
+      energy: {title:'Segnoverde Energy', calc: calcEnergy},
+      svMobile: {title:'Segnoverde Mobile', calc: calcSvMobile},
+      tMobile: {title:'Tiscali Mobile', calc: calcTMobile},
+      tFisso: {title:'Tiscali Fisso', calc: calcTFisso},
+    };
+    const m = meta[key];
+    let html = `<h2>${m.title}</h2><div class="rp-sub">SCONTRINO COMPONENTE · ${new Date().toLocaleDateString('it-IT')}</div>`;
+    let total = 0;
+    let any = false;
+    state.partners.forEach(p=>{
+      const d = state.data[p.id];
+      const val = m.calc(d);
+      total += val;
+      if (val > 0){
+        any = true;
+        html += `<div class="rp-sec-title">${(p.name || 'Partner').toUpperCase()}</div>`;
+        html += categoryLinesHTML(key, d);
+        html += `<div class="rp-line"><b>Subtotale ${p.name || 'Partner'}</b><b>${fmt(val)}</b></div>`;
+      }
+    });
+    if (!any) html += `<div class="rp-line"><span class="item-name">Nessun valore inserito</span><span>${fmt(0)}</span></div>`;
+    html += `<div class="rp-total"><span>TOTALE ${m.title.toUpperCase()}</span><span>${fmt(total)}</span></div>`;
+    html += `<button class="rp-close" id="rpClose">Chiudi</button>`;
+    return html;
+  }
+
+  function renderAll(){
+    renderPartnerRow();
+    renderNameRow();
+    renderEntry();
+    renderSummary();
+  }
+
+  function setupTabs(){
+    document.querySelectorAll('#compensi-app .tab-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        document.querySelectorAll('#compensi-app .tab-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTab = btn.dataset.tab;
+        document.getElementById('tab-entry').style.display = activeTab==='entry' ? '' : 'none';
+        document.getElementById('tab-summary').style.display = activeTab==='summary' ? '' : 'none';
+        document.getElementById('receiptBar').style.display = activeTab==='entry' ? 'flex' : 'none';
+        if (activeTab==='summary') renderSummary();
+      };
+    });
+  }
+
+  function openReceiptModal(partnerId){
+    document.getElementById('receiptPaper').innerHTML = buildReceiptHTML(partnerId);
+    document.getElementById('receiptModal').classList.add('open');
+    document.getElementById('rpClose').onclick = ()=> document.getElementById('receiptModal').classList.remove('open');
+  }
+
+  function setupReceiptModal(){
+    document.getElementById('receiptBar').onclick = ()=> openReceiptModal(state.activeId);
+    document.getElementById('receiptModal').onclick = (e)=>{
+      if (e.target.id === 'receiptModal') document.getElementById('receiptModal').classList.remove('open');
+    };
+  }
+
+  function setupCanvassWord(){
+    const span = document.getElementById('canvassWord');
+    span.textContent = state.canvassLabel || 'mese';
+    span.addEventListener('input', ()=>{
+      state.canvassLabel = span.textContent.trim() || 'mese';
+      save();
+    });
+    span.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); span.blur(); } });
+  }
+
+  async function init(){
+    await load();
+    setupTabs();
+    setupReceiptModal();
+    setupCanvassWord();
+    renderAll();
+  }
+  init();
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>
